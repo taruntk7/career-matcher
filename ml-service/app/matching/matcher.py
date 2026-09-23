@@ -214,6 +214,20 @@ def enrich_with_capabilities(
         enriched_match = {
             **match,
 
+            # Full O*NET capability lists
+            # retained for later gap analysis.
+            "essential_skills":
+                occupation.get(
+                    "essential_skills",
+                    [],
+                ),
+
+            "transferable_skills":
+                occupation.get(
+                    "transferable_skills",
+                    [],
+                ),     
+
             "matched_essential_skills":
                 result.get(
                     "matched_essential_skills",

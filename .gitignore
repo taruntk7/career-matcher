@@ -28,3 +28,12 @@ Thumbs.db
 
 # Local data
 data/onet/*
+
+# RAG generated artifacts
+data/rag/documents/*
+data/rag/processed/*
+data/rag/chroma/*
+
+# Evaluation generated artifacts
+data/evaluation/analysis_cache/*
+data/evaluation/evaluation_results.json

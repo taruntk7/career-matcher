@@ -51,6 +51,15 @@ from matching.recommendation import (
     build_recommendation,
 )
 
+from rag.retriever import (
+    load_retriever,
+    retrieve_occupation,
+)
+
+from rag.generator import (
+    generate_answer,
+)
+
 
 # =========================================================
 # Main
@@ -350,15 +359,15 @@ def main():
         )
 
     # -----------------------------------------------------
-    # 14. Capability gaps
+    # 14. Potential capability gaps
     # -----------------------------------------------------
 
     print()
-    print("Capability gaps:")
+    print("Potential capability gaps:")
     print("-" * 70)
 
     capability_gaps = recommendation[
-        "capability_gaps"
+        "potential_capability_gaps"
     ]
 
     if capability_gaps:
@@ -371,6 +380,10 @@ def main():
                 f"{gap['type']}"
                 f" | importance: "
                 f"{gap['importance']:.2f}"
+                f" | priority: "
+                f"{gap['priority']:.3f}"
+                f" | status: "
+                f"{gap['evidence_status']}"
             )
 
     else:
@@ -380,23 +393,23 @@ def main():
         )
 
     # -----------------------------------------------------
-    # 15. Technical gaps
+    # 15. Technical mismatches
     # -----------------------------------------------------
 
     print()
-    print("Technical gaps:")
+    print("Technical mismatches:")
     print("-" * 70)
 
-    technical_gaps = recommendation[
-        "technical_gaps"
+    technical_mismatches = recommendation[
+        "technical_mismatches"
     ]
 
-    if technical_gaps:
+    if technical_mismatches:
 
-        for gap in technical_gaps:
+        for mismatch in technical_mismatches:
 
             print(
-                f"- {gap}"
+                f"- {mismatch}"
             )
 
     else:
@@ -404,6 +417,87 @@ def main():
         print(
             "- None"
         )
+
+    # =====================================================
+    # RAG CAREER GUIDANCE
+    # =====================================================
+
+    # -----------------------------------------------------
+    # 16. Load RAG retriever
+    # -----------------------------------------------------
+
+    rag_model, rag_collection = (
+        load_retriever()
+    )
+
+    # -----------------------------------------------------
+    # 17. Get recommended occupation
+    # -----------------------------------------------------
+
+    recommended_occupation = (
+        recommendation["title"]
+    )
+
+    recommended_code = (
+        recommendation.get("code")
+    )
+
+    # -----------------------------------------------------
+    # 18. Retrieve exact occupation document
+    # -----------------------------------------------------
+
+    occupation_document = (
+        retrieve_occupation(
+            collection=rag_collection,
+            occupation_code=recommended_code,
+            occupation_title=recommended_occupation,
+        )
+    )
+
+    # -----------------------------------------------------
+    # 19. Generate personalized RAG guidance
+    # -----------------------------------------------------
+
+    question = (
+        "What should I focus on learning next "
+        "to become more suitable for this career?"
+    )
+
+    rag_answer = generate_answer(
+        occupation=recommended_occupation,
+        question=question,
+        occupation_document=occupation_document,
+        capability_gaps=capability_gaps,
+        technical_mismatches=technical_mismatches,
+        capability_strengths=strengths,
+        technical_strengths=technical_strengths,
+    )
+
+    # -----------------------------------------------------
+    # 20. Display RAG guidance
+    # -----------------------------------------------------
+
+    print()
+    print("=" * 70)
+    print("RAG-BASED CAREER GUIDANCE")
+    print("=" * 70)
+
+    print()
+
+    if occupation_document:
+
+        print(
+            f"Knowledge source: "
+            f"{occupation_document['metadata'].get('title')}"
+        )
+
+        print(
+            f"O*NET code: "
+            f"{occupation_document['metadata'].get('code')}"
+        )
+
+    print()
+    print(rag_answer)
 
 
 # =========================================================

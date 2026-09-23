@@ -146,6 +146,34 @@ def clean_evidence(
 
 
 # =========================================================
+# Gap priority
+# =========================================================
+
+def calculate_gap_priority(
+    importance: float,
+) -> float:
+    """
+    Estimate the priority of a potential capability gap.
+
+    O*NET importance is treated as a 0-5 scale and
+    normalized into [0, 1].
+
+    This is a prioritization signal, NOT a probability
+    that the candidate must learn the capability.
+    """
+
+    importance = max(
+        0.0,
+        min(
+            5.0,
+            float(importance),
+        ),
+    )
+
+    return importance / 5.0
+
+
+# =========================================================
 # Sort helpers
 # =========================================================
 
@@ -601,7 +629,7 @@ def build_recommendation(
     )
 
     # -----------------------------------------------------
-    # Capability gaps
+    # Potential capability gaps
     # -----------------------------------------------------
 
     matched_names = {
@@ -638,7 +666,11 @@ def build_recommendation(
         or []
     )
 
-    capability_gaps = []
+    potential_capability_gaps = []
+
+    # -----------------------------------------------------
+    # Essential potential gaps
+    # -----------------------------------------------------
 
     for skill in occupation_essential:
 
@@ -655,7 +687,14 @@ def build_recommendation(
         if name.lower() in matched_names:
             continue
 
-        capability_gaps.append(
+        importance = to_float(
+            skill.get(
+                "importance",
+                0.0,
+            )
+        )
+
+        potential_capability_gaps.append(
             {
                 "name":
                     name,
@@ -664,14 +703,21 @@ def build_recommendation(
                     "essential",
 
                 "importance":
-                    to_float(
-                        skill.get(
-                            "importance",
-                            0.0,
-                        )
+                    importance,
+
+                "evidence_status":
+                    "not_evidenced",
+
+                "priority":
+                    calculate_gap_priority(
+                        importance
                     ),
             }
         )
+
+    # -----------------------------------------------------
+    # Transferable potential gaps
+    # -----------------------------------------------------
 
     for skill in occupation_transferable:
 
@@ -688,7 +734,14 @@ def build_recommendation(
         if name.lower() in matched_names:
             continue
 
-        capability_gaps.append(
+        importance = to_float(
+            skill.get(
+                "importance",
+                0.0,
+            )
+        )
+
+        potential_capability_gaps.append(
             {
                 "name":
                     name,
@@ -697,33 +750,51 @@ def build_recommendation(
                     "transferable",
 
                 "importance":
-                    to_float(
-                        skill.get(
-                            "importance",
-                            0.0,
-                        )
+                    importance,
+
+                "evidence_status":
+                    "not_evidenced",
+
+                "priority":
+                    calculate_gap_priority(
+                        importance
                     ),
             }
         )
 
-    capability_gaps.sort(
+    # -----------------------------------------------------
+    # Sort potential gaps
+    #
+    # Essential capabilities remain ahead of
+    # transferable capabilities.
+    #
+    # Within each type, higher priority comes first.
+    # -----------------------------------------------------
+
+    potential_capability_gaps.sort(
         key=lambda item: (
             0
             if item["type"] == "essential"
             else 1,
-            -item["importance"],
+
+            -item["priority"],
         )
     )
 
-    capability_gaps = (
-        capability_gaps[:8]
+    potential_capability_gaps = (
+        potential_capability_gaps[:8]
     )
 
     # -----------------------------------------------------
-    # Technical gaps
+    # Technical mismatches
+    #
+    # These are candidate technical skills that were
+    # not found in the occupation's O*NET software examples.
+    #
+    # They are NOT automatically learning requirements.
     # -----------------------------------------------------
 
-    technical_gaps = []
+    technical_mismatches = []
 
     for skill in missing_technical:
 
@@ -746,12 +817,12 @@ def build_recommendation(
             ).strip()
 
         if name:
-            technical_gaps.append(
+            technical_mismatches.append(
                 name
             )
 
-    technical_gaps = (
-        technical_gaps[:8]
+    technical_mismatches = (
+        technical_mismatches[:8]
     )
 
     # -----------------------------------------------------
@@ -804,9 +875,6 @@ def build_recommendation(
         "matched_technical_skills":
             matched_technical,
 
-        "missing_technical_skills":
-            missing_technical,
-
         "matched_essential_capabilities":
             matched_essential,
 
@@ -819,11 +887,24 @@ def build_recommendation(
         "top_technical_strengths":
             top_technical_strengths,
 
+        # New, clearer names
+        "potential_capability_gaps":
+            potential_capability_gaps,
+
+        "technical_mismatches":
+            technical_mismatches,
+
+        # Backwards-compatible names
         "capability_gaps":
-            capability_gaps,
+            potential_capability_gaps,
 
         "technical_gaps":
-            technical_gaps,
+            technical_mismatches,
+
+        # Keep the raw technical mismatch data too
+        # for existing consumers.
+        "missing_technical_skills":
+            missing_technical,
     }
 
     return recommendation
@@ -1171,14 +1252,14 @@ if __name__ == "__main__":
         )
 
     print()
-    print("Capability gaps:")
+    print("Potential capability gaps:")
 
     if recommendation[
-        "capability_gaps"
+        "potential_capability_gaps"
     ]:
 
         for gap in recommendation[
-            "capability_gaps"
+            "potential_capability_gaps"
         ]:
 
             print(
@@ -1186,6 +1267,10 @@ if __name__ == "__main__":
                 f" | type: {gap['type']}"
                 f" | importance: "
                 f"{gap['importance']:.2f}"
+                f" | priority: "
+                f"{gap['priority']:.3f}"
+                f" | status: "
+                f"{gap['evidence_status']}"
             )
 
     else:
@@ -1195,18 +1280,18 @@ if __name__ == "__main__":
         )
 
     print()
-    print("Technical gaps:")
+    print("Technical mismatches:")
 
     if recommendation[
-        "technical_gaps"
+        "technical_mismatches"
     ]:
 
-        for gap in recommendation[
-            "technical_gaps"
+        for mismatch in recommendation[
+            "technical_mismatches"
         ]:
 
             print(
-                f"- {gap}"
+                f"- {mismatch}"
             )
 
     else:
