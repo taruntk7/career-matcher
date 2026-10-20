@@ -1,0 +1,284 @@
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * Delete the template below * * * * * * * * * -->
+<!-- * * * * * * * to get started with your project! * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+
+<main class="main overflow-x-hidden">
+  <div class="flex justify-between mt-4 mx-4">
+    <div class="flex space-x-2">
+      <h2 class="text-2xl font-medium ml-10">Career </h2>
+      <div class="flex space-x-24 ml-20 mt-1.5">
+        <a class="text-xl font-normal tracking-tighter hover:scale-105 transition-transform duration-200 hover:font-semibold hover: cursor-pointer ">Home</a>
+        <a class="text-xl font-normal tracking-tighter hover:scale-105 transition-transform duration-200 hover:font-semibold hover: cursor-pointer ">About</a>
+        <a class="text-xl font-normal tracking-tighter hover:scale-105 transition-transform duration-200 hover:font-semibold hover: cursor-pointer ">Explore</a>
+        <a class="text-xl font-normal tracking-tighter hover:scale-105 transition-transform duration-200 hover:font-semibold hover: cursor-pointer ">Contact Us</a>
+      </div>
+    </div>
+    <div class="flex space-x-4 mr-22 mt-2">
+        <button class="text-violet-600 text-md font-semibold px-10 py-1.5 border-2 border-violet-600 tracking-tighter hover:scale-105  hover:font-semibold hover: cursor-pointer hover:bg-violet-600 hover:text-white transition-transform duration-300">Log In</button>
+        <button class="text-white text-md font-semibold px-10 py-1.5  tracking-tighter bg-violet-900 hover:scale-105  hover:font-semibold hover: cursor-pointer hover:bg-violet-600 hover:text-white transition-transform duration-300">Resume</button>
+    </div>
+  </div>
+  <!-- Hero two parts left and right-->
+  <div class="mt-42 flex justify-between">
+    <div class="flex flex-col space-y-6 ml-25 mt-10">
+      <h2 class="text-6xl font-bold tracking-tight leading-tight min-h-36 -ml-6">
+  {{ typedHeading }}
+  <span class="text-violet-900 animate-pulse">|</span>
+</h2>
+      <p class="text-2xl font-semibold max-w-180 ml-20 -mt-10"> Turn your resume into a personalized career roadmap.
+  Discover matching jobs, identify skill gaps, and explore
+  the path to your next opportunity.
+    See where your experience fits, what skills you're missing,
+    and how to move closer to the career you want.
+  </p>
+    <button
+  (click)="fileInput.click()"
+  class="ml-74 text-white text-md font-semibold max-w-40 py-3 mt-4 rounded-sm tracking-tight bg-violet-900 hover:scale-105 hover:font-semibold hover:cursor-pointer hover:text-white transition-transform duration-300">
+  View Careers
+</button>
+
+<input
+  #fileInput
+  type="file"
+  accept=".pdf,.doc,.docx"
+  class="hidden"
+  (change)="onFileSelected($event)"
+>
+<P class="text-md  max-w-180 ml-62 text-stone-500 -mt-4">Upload your resume as docx or pdf.</P>
+    </div>
+  <img src="/grphic.png" class="max-w-4xl -mr-28 -mt-20  " alt="Career graphic">
+  </div>
+</main>
+
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+<!-- NEW: Career recommendation results -->
+@if (isUploading) {
+  <section class="mx-6 mt-12 py-8 text-center">
+    <p class="text-violet-900 text-lg font-semibold">
+      Analyzing your resume...
+    </p>
+    <p class="text-stone-500 mt-2">
+      Finding the careers that best match your skills and experience.
+    </p>
+  </section>
+}
+
+@if (uploadError) {
+  <section class="mx-6 mt-8 p-5 border border-red-200 rounded-lg text-red-700">
+    <h2 class="font-semibold">Unable to analyze your resume</h2>
+    <p class="mt-2">{{ uploadError }}</p>
+  </section>
+}
+
+@if (!isUploading && recommendations.length > 0) {
+  <section id="career-results" class="mx-6 mt-20 mb-16">
+    <div class="text-center mb-10">
+      <p class="text-violet-800 text-sm font-semibold uppercase tracking-widest">
+        Personalized career recommendations
+      </p>
+
+      <h1 class="text-3xl md:text-4xl font-bold mt-3">
+        Your Top Career Matches
+      </h1>
+
+      <p class="text-stone-500 mt-3">
+        Based on your skills, experience, and demonstrated capabilities.
+      </p>
+    </div>
+
+    <!-- Dynamic grid: one card for each recommended occupation -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+      @for (job of recommendations; track job.code) {
+        <article class="bg-white border border-stone-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
+
+          <!-- Rank and occupation code -->
+          <div class="flex justify-between items-center gap-3">
+            <span class="text-sm font-semibold text-violet-800 bg-violet-50 px-3 py-1.5 rounded-full">
+              Rank #{{ job.rank }}
+            </span>
+
+            <span class="text-xs text-stone-500">
+              {{ job.code }}
+            </span>
+          </div>
+
+          <!-- Career title and description -->
+          <h2 class="text-xl font-bold mt-5 leading-snug">
+            {{ job.title }}
+          </h2>
+
+          <p class="text-sm text-stone-600 mt-3 leading-relaxed">
+            {{ job.description }}
+          </p>
+
+          <!-- Overall match score -->
+          <div class="mt-6">
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-stone-500">Overall match score</span>
+
+              <span class="text-2xl font-bold text-violet-900">
+                {{ (job.final_score * 100).toFixed(1) }}%
+              </span>
+            </div>
+
+            <div class="w-full bg-stone-100 rounded-full h-2 mt-3">
+              <div
+                class="bg-violet-800 h-2 rounded-full"
+                [style.width.%]="job.final_score * 100">
+              </div>
+            </div>
+
+            <p class="text-xs text-stone-400 mt-2">
+              Ranking score, not a probability of getting hired.
+            </p>
+          </div>
+
+          <!-- Score breakdown -->
+          <div class="mt-7">
+            <h3 class="font-semibold text-base">Score breakdown</h3>
+
+            <div class="mt-3 space-y-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-stone-500">Semantic match</span>
+                <span class="font-medium">
+                  {{ (job.semantic_score * 100).toFixed(1) }}%
+                </span>
+              </div>
+
+              <div class="flex justify-between text-sm">
+                <span class="text-stone-500">Capability match</span>
+                <span class="font-medium">
+                  {{ (job.capability_score * 100).toFixed(1) }}%
+                </span>
+              </div>
+
+              <div class="flex justify-between text-sm">
+                <span class="text-stone-500">Technical match</span>
+                <span class="font-medium">
+                  {{ (job.technical_score * 100).toFixed(1) }}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Why this career matches -->
+          <div class="mt-7">
+            <h3 class="font-semibold text-base">Why this matches</h3>
+
+            <ul class="mt-3 space-y-2">
+              @for (reason of job.reasons; track reason) {
+                <li class="flex gap-2 text-sm text-stone-600 leading-relaxed">
+                  <span class="text-violet-800">✓</span>
+                  <span>{{ reason }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <!-- Technical strengths -->
+          <div class="mt-7">
+            <h3 class="font-semibold text-base">Technical strengths</h3>
+
+            <div class="flex flex-wrap gap-2 mt-3">
+              @for (skill of job.top_technical_strengths; track skill.name) {
+                <span class="text-xs font-medium bg-violet-50 text-violet-800 rounded-md px-3 py-2">
+                  {{ skill.name }}
+                </span>
+              }
+            </div>
+
+            @if (job.top_technical_strengths.length === 0) {
+              <p class="text-sm text-stone-500 mt-2">
+                No technical strengths were matched.
+              </p>
+            }
+          </div>
+
+          <!-- Capability strengths -->
+          <div class="mt-7">
+            <h3 class="font-semibold text-base">Capability strengths</h3>
+
+            <ul class="mt-3 space-y-3">
+              @for (strength of job.top_capability_strengths; track strength.name) {
+                <li class="text-sm">
+                  <p class="font-medium text-stone-800">
+                    {{ strength.name }}
+                  </p>
+
+                  <p class="text-xs text-stone-500 mt-1">
+                    Evidence strength:
+                    {{ (strength.evidence_strength * 100).toFixed(0) }}%
+                  </p>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <!-- Potential gaps -->
+          <div class="mt-7 pt-5 border-t border-stone-100">
+            <h3 class="font-semibold text-base">Potential capability gaps</h3>
+
+            <p class="text-xs text-stone-500 mt-2 leading-relaxed">
+              These capabilities were not evidenced in your resume.
+              This does not necessarily mean you lack them.
+            </p>
+
+            <ul class="mt-3 space-y-2">
+              @for (gap of job.potential_capability_gaps; track gap.name) {
+                <li class="flex justify-between items-center gap-3 text-sm">
+                  <span class="text-stone-700">{{ gap.name }}</span>
+
+                  <span class="text-xs text-stone-500 shrink-0">
+                    {{ gap.type }}
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+
+        </article>
+      }
+
+    </div>
+  </section>
+
+  <!-- Career guidance, if the API provides it -->
+  <section class="mx-6 mb-16">
+    @if (careerGuidance) {
+      <div class="border border-violet-100 rounded-xl p-6 md:p-8">
+        <h2 class="text-2xl font-bold">Your Career Roadmap</h2>
+
+        <p class="text-stone-600 mt-4 leading-relaxed whitespace-pre-line">
+          {{ careerGuidance }}
+        </p>
+      </div>
+    } @else {
+      <div class="bg-stone-50 rounded-xl p-5">
+        <h2 class="font-semibold">Career guidance is temporarily unavailable</h2>
+
+        <p class="text-sm text-stone-500 mt-2">
+          Your career matches are ready. Personalized learning guidance
+          will appear here once the guidance service is available.
+        </p>
+      </div>
+    }
+  </section>
+}
+<!-- END NEW: Career recommendation results -->
+
+
+<router-outlet />
