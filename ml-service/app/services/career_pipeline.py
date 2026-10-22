@@ -1,4 +1,4 @@
-"""Orchestrate resume analysis, occupation ranking, and RAG career guidance."""
+"""Orchestrate resume analysis, occupation ranking, and structured RAG guidance."""
 
 import logging
 import sys
@@ -45,14 +45,18 @@ def _load_occupation_dataset():
 
 @lru_cache(maxsize=1)
 def _load_rag_resources():
-    """Load RAG resources lazily so missing RAG setup doesn't prevent ranking."""
+    """Load RAG resources lazily so RAG setup does not prevent ranking."""
     from rag.retriever import load_retriever
 
     logger.info("Loading career-guidance RAG resources")
     return load_retriever()
 
 
-def _build_recommendation(match: dict[str, Any], rank: int, occupation_by_code: dict[str, dict]) -> dict[str, Any]:
+def _build_recommendation(
+    match: dict[str, Any],
+    rank: int,
+    occupation_by_code: dict[str, dict],
+) -> dict[str, Any]:
     recommendation = build_recommendation(match)
     code = match.get("code")
     occupation_record = occupation_by_code.get(str(code), {})
@@ -65,8 +69,26 @@ def _build_recommendation(match: dict[str, Any], rank: int, occupation_by_code: 
     return recommendation
 
 
-def run_career_pipeline(resume_path: str | Path, original_filename: str | None = None) -> dict[str, Any]:
-    """Run analysis -> retrieval -> enrichment -> ranking -> recommendation -> RAG."""
+def _legacy_guidance_summary(roadmap: dict[str, Any] | None) -> str | None:
+    """Keep the old string field available for clients not yet using the cards."""
+    if not roadmap:
+        return None
+
+    summary = str(roadmap.get("summary") or "").strip()
+    first_priority = (roadmap.get("priorities") or [None])[0]
+    if first_priority:
+        title = str(first_priority.get("title") or "").strip()
+        reason = str(first_priority.get("reason") or "").strip()
+        if title and reason:
+            summary = f"{summary}\n\nFirst priority — {title}: {reason}".strip()
+    return summary or None
+
+
+def run_career_pipeline(
+    resume_path: str | Path,
+    original_filename: str | None = None,
+) -> dict[str, Any]:
+    """Run analysis -> retrieval -> enrichment -> ranking -> structured roadmap."""
     resume_path = Path(resume_path)
     logger.info(
         "PIPELINE START | resume_path=%s | exists=%s | original_filename=%s",
@@ -96,16 +118,6 @@ def run_career_pipeline(resume_path: str | Path, original_filename: str | None =
         len(explicit_skills),
         len(capabilities),
     )
-
-    base_response: dict[str, Any] = {
-        "filename": resume_result.get("filename"),
-        "file_type": resume_result.get("file_type"),
-        # Retained for compatibility with the current API response.
-        "raw_text": profile_text,
-        "analysis": analysis,
-        "explicit_skills": explicit_skills,
-        "capabilities": capabilities,
-    }
 
     # 2. Load the matcher / O*NET dataset, retrieve candidates, and enrich them.
     model, collection = _load_matching_resources()
@@ -146,10 +158,12 @@ def run_career_pipeline(resume_path: str | Path, original_filename: str | None =
             "career_guidance_status": "not_run",
             "career_guidance_source": None,
             "career_guidance_error": None,
+            "career_roadmap": None,
+            "career_roadmap_status": "not_run",
             "message": "Resume analyzed, but no occupation matches were returned.",
         }
 
-    # 4. Prepare detailed results for the top 10 ranked occupations.
+    # 4. Prepare the top three ranked occupation recommendations.
     recommendations = [
         _build_recommendation(match, rank, occupation_by_code)
         for rank, match in enumerate(matches[:3], start=1)
@@ -163,17 +177,16 @@ def run_career_pipeline(resume_path: str | Path, original_filename: str | None =
         best_recommendation.get("final_score"),
     )
 
-    # 5. Generate RAG guidance for the top-ranked occupation.
-    # If the separate RAG collection, roadmap mapping, or Groq call is not
-    # available, preserve the ranked recommendations and report the issue.
-    career_guidance = None
+    # 5. Build structured RAG roadmap data for the dedicated Angular component.
+    # The chatbot still uses generate_answer() separately through its own endpoint.
+    career_roadmap = None
     guidance_status = "unavailable"
     guidance_source = None
     guidance_error = None
 
     try:
         from rag.retriever import retrieve_occupation
-        from rag.generator import generate_answer
+        from rag.generator import generate_structured_roadmap
 
         _rag_model, rag_collection = _load_rag_resources()
         occupation_document = retrieve_occupation(
@@ -192,17 +205,22 @@ def run_career_pipeline(resume_path: str | Path, original_filename: str | None =
                 best_recommendation.get("code"),
             )
         else:
-            question = (
-                "What should I focus on learning next to become more suitable for this career?"
-            )
-            career_guidance = generate_answer(
+            career_roadmap = generate_structured_roadmap(
                 occupation=best_recommendation["title"],
-                question=question,
                 occupation_document=occupation_document,
-                capability_gaps=best_recommendation.get("potential_capability_gaps", []),
-                technical_mismatches=best_recommendation.get("technical_mismatches", []),
-                capability_strengths=best_recommendation.get("top_capability_strengths", []),
-                technical_strengths=best_recommendation.get("top_technical_strengths", []),
+                capability_gaps=best_recommendation.get(
+                    "potential_capability_gaps", []
+                ),
+                technical_mismatches=best_recommendation.get(
+                    "technical_mismatches", []
+                ),
+                capability_strengths=best_recommendation.get(
+                    "top_capability_strengths", []
+                ),
+                technical_strengths=best_recommendation.get(
+                    "top_technical_strengths", []
+                ),
+                resume_explicit_skills=explicit_skills,
             )
             guidance_status = "success"
             metadata = occupation_document.get("metadata") or {}
@@ -211,40 +229,45 @@ def run_career_pipeline(resume_path: str | Path, original_filename: str | None =
                 "code": metadata.get("code"),
             }
             logger.info(
-                "RAG GUIDANCE COMPLETE | occupation=%s | source=%s",
+                "STRUCTURED RAG ROADMAP COMPLETE | occupation=%s | source=%s | priorities=%d",
                 best_recommendation.get("title"),
                 guidance_source,
+                len(career_roadmap.get("priorities", [])),
             )
 
     except Exception as exc:
         guidance_error = f"{type(exc).__name__}: {exc}"
         logger.exception(
-            "RAG GUIDANCE FAILED | occupation=%s | error_type=%s",
+            "STRUCTURED RAG ROADMAP FAILED | occupation=%s | error_type=%s",
             best_recommendation.get("title"),
             type(exc).__name__,
         )
 
+    legacy_guidance = _legacy_guidance_summary(career_roadmap)
+
     logger.info(
-        "PIPELINE COMPLETE | filename=%s | recommendations=%d | rag_status=%s",
+        "PIPELINE COMPLETE | filename=%s | recommendations=%d | roadmap_status=%s",
         resume_result.get("filename"),
         len(recommendations),
         guidance_status,
     )
 
-    # Return one copy of the top-three detailed recommendations.
-    # Avoid duplicating the same large objects under multiple keys,
-    # and omit the extracted resume text from the API response.
+    # The new career_roadmap value is structured JSON for the roadmap component.
+    # career_guidance remains a short compatibility summary for older clients.
     return {
         "filename": resume_result.get("filename"),
         "recommendations": recommendations,
-        "career_guidance": career_guidance,
+        "explicit_skills": explicit_skills,
+        "career_roadmap": career_roadmap,
+        "career_roadmap_status": guidance_status,
+        "career_guidance": legacy_guidance,
         "career_guidance_status": guidance_status,
         "career_guidance_source": guidance_source,
         "career_guidance_error": guidance_error,
         "message": (
-            "Top career recommendations generated."
+            "Top career recommendations and personalized roadmap generated."
             if career_guidance_status_success(guidance_status)
-            else "Top career recommendations generated; career guidance is unavailable."
+            else "Top career recommendations generated; career roadmap is unavailable."
         ),
     }
 

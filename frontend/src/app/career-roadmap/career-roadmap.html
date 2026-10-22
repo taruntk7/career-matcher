@@ -1,0 +1,198 @@
+<section class="roadmap-shell" aria-labelledby="roadmap-title">
+  @if (roadmap) {
+    <header class="roadmap-hero">
+      <div class="roadmap-eyebrow">YOUR PERSONALIZED PLAN</div>
+      <div class="roadmap-title-row">
+        <div>
+          <h2 id="roadmap-title">Your Career Roadmap</h2>
+          <p class="roadmap-occupation">{{ roadmap.occupation }}</p>
+        </div>
+        @if (roadmap.sources.onet?.code) {
+          <span class="roadmap-code">O*NET {{ roadmap.sources.onet?.code }}</span>
+        }
+      </div>
+      <p class="roadmap-summary">{{ roadmap.summary }}</p>
+      <div class="roadmap-source-line">
+        <span><span class="source-dot"></span> Personalized using your resume findings</span>
+        <span><span class="source-dot source-dot-muted"></span> Occupation context from O*NET</span>
+      </div>
+    </header>
+
+    <div class="roadmap-overview-grid">
+      <section class="roadmap-panel strengths-panel" aria-labelledby="roadmap-strengths-title">
+        <div class="panel-heading">
+          <span class="panel-icon strength-icon">✓</span>
+          <div>
+            <h3 id="roadmap-strengths-title">What you're already bringing</h3>
+            <p>Relevant strengths evidenced in your profile</p>
+          </div>
+        </div>
+        @if (roadmap.strengths.length > 0) {
+          <div class="strength-list">
+            @for (strength of roadmap.strengths; track strength.title) {
+              <article class="strength-item">
+                <h4>{{ strength.title }}</h4>
+                @if (strength.evidence) {
+                  <p class="strength-evidence">{{ strength.evidence }}</p>
+                }
+                @if (strength.relevance) {
+                  <p class="strength-relevance">{{ strength.relevance }}</p>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <p class="roadmap-muted">The analysis did not return specific strengths for this section.</p>
+        }
+      </section>
+
+      <section class="roadmap-panel approach-panel" aria-labelledby="roadmap-approach-title">
+        <div class="panel-heading">
+          <span class="panel-icon approach-icon">◎</span>
+          <div>
+            <h3 id="roadmap-approach-title">How to use this plan</h3>
+            <p>Focus on evidence, not labels</p>
+          </div>
+        </div>
+        <div class="approach-item">
+          <span class="approach-number">01</span>
+          <p>Build on capabilities and tools already demonstrated in your resume.</p>
+        </div>
+        <div class="approach-item">
+          <span class="approach-number">02</span>
+          <p>A potential gap means the resume did not show enough evidence; it does not prove you lack that ability.</p>
+        </div>
+        <div class="approach-item">
+          <span class="approach-number">03</span>
+          <p>Treat suggested projects as practical ways to develop and demonstrate skills, not as a mandatory checklist.</p>
+        </div>
+      </section>
+    </div>
+
+    <section class="roadmap-section" aria-labelledby="roadmap-priorities-title">
+      <div class="section-heading">
+        <div>
+          <div class="roadmap-eyebrow">WHERE TO FOCUS</div>
+          <h3 id="roadmap-priorities-title">Your learning priorities</h3>
+        </div>
+        <p>Start with the highest-value next steps. You don't need to do everything at once.</p>
+      </div>
+
+      @if (roadmap.priorities.length > 0) {
+        <div class="priority-grid">
+          @for (priority of roadmap.priorities; track priority.title; let index = $index) {
+            <article class="priority-card">
+              <div class="priority-card-top">
+                <span class="priority-index">0{{ index + 1 }}</span>
+                @if (priority.timeframe) {
+                  <span class="priority-timeframe">{{ priority.timeframe }}</span>
+                }
+              </div>
+              <h4>{{ priority.title }}</h4>
+              <p class="priority-reason">{{ priority.reason }}</p>
+
+              @if (priority.resume_evidence) {
+                <div class="resume-evidence">
+                  <span class="detail-label">What your resume shows</span>
+                  <p>{{ priority.resume_evidence }}</p>
+                </div>
+              }
+
+              @if (priority.actions.length > 0) {
+                <div class="priority-actions">
+                  <span class="detail-label">Practical actions</span>
+                  <ul>
+                    @for (action of priority.actions; track $index) {
+                      <li>{{ action }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              @if (priority.roadmap_topics.length > 0) {
+                <div class="topic-chips" aria-label="Related learning topics">
+                  @for (topic of priority.roadmap_topics; track topic) {
+                    <span>{{ topic }}</span>
+                  }
+                </div>
+              }
+            </article>
+          }
+        </div>
+      } @else {
+        <p class="roadmap-muted">No learning priorities were returned for this profile.</p>
+      }
+    </section>
+
+    <section class="roadmap-section plan-section" aria-labelledby="roadmap-plan-title">
+      <div class="section-heading">
+        <div>
+          <div class="roadmap-eyebrow">MAKE IT ACTIONABLE</div>
+          <h3 id="roadmap-plan-title">A practical four-week plan</h3>
+        </div>
+        <p>Small steps that turn recommendations into evidence you can show.</p>
+      </div>
+
+      <div class="week-grid">
+        @for (week of roadmap.four_week_plan; track week.week) {
+          <article class="week-card">
+            <div class="week-label">WEEK {{ week.week }}</div>
+            <h4>{{ week.focus }}</h4>
+            <ul>
+              @for (action of week.actions; track $index) {
+                <li>{{ action }}</li>
+              }
+            </ul>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="roadmap-next-step" aria-labelledby="roadmap-next-title">
+      <div class="next-step-icon">↗</div>
+      <div>
+        <div class="roadmap-eyebrow">START HERE</div>
+        <h3 id="roadmap-next-title">Your next step</h3>
+        <p>{{ roadmap.next_step }}</p>
+      </div>
+    </section>
+
+    <details class="roadmap-sources">
+      <summary>About the sources behind this roadmap</summary>
+      <div class="source-details">
+        @if (roadmap.sources.onet) {
+          <div>
+            <strong>O*NET occupation profile</strong>
+            <p>{{ roadmap.sources.onet.title || roadmap.occupation }}@if (roadmap.sources.onet.code) { · {{ roadmap.sources.onet.code }}}</p>
+            <span>Used for occupation tasks, capabilities and associated technologies.</span>
+          </div>
+        }
+        @if (roadmap.sources.roadmap) {
+          <div>
+            <strong>{{ roadmap.sources.roadmap.name || 'Learning roadmap reference' }}</strong>
+            @if (roadmap.sources.roadmap.url) {
+              <p><a [href]="roadmap.sources.roadmap.url" target="_blank" rel="noopener noreferrer">Open roadmap reference ↗</a></p>
+            }
+            @if (roadmap.sources.roadmap.topics.length > 0) {
+              <ul>
+                @for (topic of roadmap.sources.roadmap.topics; track topic.name) {
+                  <li><strong>{{ topic.name }}</strong>@if (topic.subtopics.length > 0) { — {{ topic.subtopics.join(', ') }}}</li>
+                }
+              </ul>
+            }
+          </div>
+        } @else {
+          <p>No specific roadmap.sh pathway is currently mapped to this occupation. The learning priorities above are personalized suggestions based on the occupation context and resume findings.</p>
+        }
+        <p class="source-disclaimer">Resume evidence and suggested actions are system findings and AI-generated guidance respectively; they are not official O*NET assessments.</p>
+      </div>
+    </details>
+  } @else {
+    <div class="roadmap-unavailable">
+      <div class="roadmap-eyebrow">PERSONALIZED CAREER PLAN</div>
+      <h2 id="roadmap-title">Your Career Roadmap</h2>
+      <p>Your career matches are ready, but the structured roadmap could not be generated this time.</p>
+      <p class="roadmap-muted">{{ status === 'unavailable' ? 'Please try analyzing your resume again in a moment.' : 'A roadmap will appear here after your resume analysis completes.' }}</p>
+    </div>
+  }
+</section>

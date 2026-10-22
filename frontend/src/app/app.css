@@ -1,0 +1,231 @@
+/* Floating career-guidance chatbot; scoped by the career-chat class names. */
+.career-chat-widget {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  color: #f4f0ff;
+  font-family: inherit;
+}
+
+.career-chat-launcher {
+  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 0 13px;
+  border: 1px solid rgba(216, 180, 254, 0.35);
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #6d28d9, #7c3aed 60%, #8b5cf6);
+  box-shadow: 0 12px 32px rgba(60, 20, 100, 0.42);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.career-chat-launcher:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(60, 20, 100, 0.5); }
+.career-chat-launcher-icon { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: rgba(255,255,255,.16); font-size: 20px; line-height: 1; }
+.career-chat-launcher-open { background: #25202f; }
+.career-chat-online-dot { width: 7px; height: 7px; margin-left: 1px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.15); }
+
+.career-chat-panel {
+  width: min(390px, calc(100vw - 28px));
+  height: min(590px, calc(100vh - 112px));
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(167, 139, 250, .32);
+  border-radius: 19px;
+  color: #f5f3ff;
+  background: #17171b;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .5);
+}
+.career-chat-header {
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  background: linear-gradient(110deg, #4c1d95, #6d28d9 65%, #7c3aed);
+}
+.career-chat-brand-icon { display: grid; place-items: center; flex: 0 0 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,.16); font-size: 24px; }
+.career-chat-heading { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+.career-chat-heading strong { font-size: 14px; font-weight: 750; }
+.career-chat-heading span { color: rgba(255,255,255,.78); font-size: 11px; }
+.career-chat-close { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 9px; color: #fff; background: rgba(255,255,255,.12); font-size: 24px; cursor: pointer; }
+.career-chat-context { padding: 9px 14px; border-bottom: 1px solid #2c2932; color: #b9b2c8; background: #1c1b21; font-size: 11px; }
+.career-chat-context strong { color: #e9ddff; font-weight: 650; }
+.career-chat-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 12px; scroll-behavior: smooth; }
+.career-chat-row { display: flex; align-items: flex-end; gap: 7px; }
+.career-chat-row-user { justify-content: flex-end; }
+.career-chat-mini-avatar { flex: 0 0 25px; display: grid; place-items: center; width: 25px; height: 25px; border-radius: 9px; color: #dfc9ff; background: #30243f; font-size: 15px; }
+.career-chat-bubble { max-width: 86%; padding: 10px 12px; border: 1px solid #302d36; border-radius: 13px 13px 13px 4px; color: #e9e5ef; background: #222127; font-size: 12px; line-height: 1.55; white-space: normal; overflow-wrap: anywhere; }
+.career-chat-bubble-user { white-space: pre-wrap; border-color: #6d28d9; border-radius: 13px 13px 4px 13px; color: #fff; background: #5725a4; }
+.career-chat-bubble-error { border-color: #7f1d1d; color: #fecaca; }
+.career-chat-typing { color: #bcb4ca; font-style: italic; }
+.career-chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 10px; }
+.career-chat-suggestions button { padding: 7px 9px; border: 1px solid #49345f; border-radius: 999px; color: #decaff; background: #211b2b; font-size: 10px; cursor: pointer; }
+.career-chat-suggestions button:hover { background: #322140; }
+.career-chat-error { margin: 0; padding: 0 13px 8px; color: #fca5a5; font-size: 11px; }
+.career-chat-composer { display: flex; align-items: flex-end; gap: 8px; padding: 10px; border-top: 1px solid #302d36; background: #1b1a20; }
+.career-chat-composer textarea { flex: 1; min-width: 0; resize: none; padding: 10px 11px; border: 1px solid #403b49; border-radius: 11px; outline: none; color: #f5f3ff; background: #242229; font: inherit; font-size: 12px; line-height: 1.45; }
+.career-chat-composer textarea:focus { border-color: #8b5cf6; box-shadow: 0 0 0 2px rgba(139,92,246,.16); }
+.career-chat-composer textarea::placeholder { color: #888195; }
+.career-chat-send { flex: 0 0 39px; width: 39px; height: 39px; border: 0; border-radius: 11px; color: #fff; background: #6d28d9; font-size: 20px; cursor: pointer; }
+.career-chat-send:disabled { opacity: .45; cursor: not-allowed; }
+.career-chat-footer { padding: 0 12px 10px; color: #787183; background: #1b1a20; text-align: center; font-size: 9px; }
+
+@media (max-width: 520px) {
+  .career-chat-widget { right: 12px; bottom: 12px; }
+  .career-chat-panel { width: min(370px, calc(100vw - 24px)); height: min(580px, calc(100vh - 94px)); }
+  .career-chat-launcher { min-height: 46px; font-size: 12px; }
+}
+
+/* Rendered Markdown in the roadmap and assistant chat replies. */
+.career-markdown {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: inherit;
+  line-height: 1.7;
+}
+
+.career-roadmap-markdown {
+  color: #57534e;
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+.career-roadmap-markdown > :first-child,
+.career-chat-markdown > :first-child { margin-top: 0; }
+.career-roadmap-markdown > :last-child,
+.career-chat-markdown > :last-child { margin-bottom: 0; }
+
+.career-roadmap-markdown h1,
+.career-roadmap-markdown h2,
+.career-roadmap-markdown h3,
+.career-roadmap-markdown h4 {
+  margin: 1.5rem 0 0.65rem;
+  color: #292331;
+  font-weight: 750;
+  line-height: 1.3;
+}
+.career-roadmap-markdown h1 { font-size: 1.65rem; }
+.career-roadmap-markdown h2 { font-size: 1.35rem; }
+.career-roadmap-markdown h3 { font-size: 1.12rem; }
+.career-roadmap-markdown h4 { font-size: 1rem; }
+.career-roadmap-markdown p { margin: 0.75rem 0; }
+.career-roadmap-markdown strong { color: #312344; font-weight: 750; }
+.career-roadmap-markdown ul,
+.career-roadmap-markdown ol {
+  margin: 0.65rem 0 1rem;
+  padding-left: 1.55rem;
+}
+.career-roadmap-markdown ul { list-style: disc; }
+.career-roadmap-markdown ol { list-style: decimal; }
+.career-roadmap-markdown li { margin: 0.35rem 0; padding-left: 0.12rem; }
+.career-roadmap-markdown li > p { margin: 0.25rem 0; }
+.career-roadmap-markdown hr {
+  margin: 1.35rem 0;
+  border: 0;
+  border-top: 1px solid #e7e2ee;
+}
+.career-roadmap-markdown blockquote {
+  margin: 1rem 0;
+  padding: 0.6rem 1rem;
+  border-left: 3px solid #8b5cf6;
+  border-radius: 0 8px 8px 0;
+  background: #f8f5ff;
+}
+.career-roadmap-markdown code,
+.career-chat-markdown code {
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.12);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+.career-roadmap-markdown pre,
+.career-chat-markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.8rem;
+  border-radius: 9px;
+  background: #f5f3f7;
+  white-space: pre;
+}
+.career-roadmap-markdown pre code,
+.career-chat-markdown pre code { padding: 0; background: transparent; }
+.career-roadmap-markdown table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1rem 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.career-roadmap-markdown th,
+.career-roadmap-markdown td {
+  min-width: 100px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #e7e2ee;
+  text-align: left;
+  vertical-align: top;
+}
+.career-roadmap-markdown th {
+  color: #392653;
+  background: #f6f2fc;
+  font-weight: 700;
+}
+.career-roadmap-markdown a { color: #6d28d9; text-decoration: underline; text-underline-offset: 2px; }
+
+.career-chat-markdown {
+  color: inherit;
+  font-size: inherit;
+  line-height: 1.6;
+}
+.career-chat-markdown h1,
+.career-chat-markdown h2,
+.career-chat-markdown h3,
+.career-chat-markdown h4 {
+  margin: 0.7rem 0 0.35rem;
+  color: #f4edff;
+  font-size: 1em;
+  font-weight: 750;
+  line-height: 1.35;
+}
+.career-chat-markdown p { margin: 0 0 0.6rem; }
+.career-chat-markdown strong { color: #fff; font-weight: 750; }
+.career-chat-markdown ul,
+.career-chat-markdown ol { margin: 0.35rem 0 0.65rem; padding-left: 1.25rem; }
+.career-chat-markdown ul { list-style: disc; }
+.career-chat-markdown ol { list-style: decimal; }
+.career-chat-markdown li { margin: 0.2rem 0; }
+.career-chat-markdown hr { margin: 0.7rem 0; border: 0; border-top: 1px solid #40394a; }
+.career-chat-markdown table {
+  display: block;
+  max-width: 100%;
+  margin: 0.6rem 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.career-chat-markdown th,
+.career-chat-markdown td { padding: 0.35rem 0.45rem; border: 1px solid #46404f; text-align: left; vertical-align: top; }
+.career-chat-markdown th { background: #30283c; color: #f4edff; }
+.career-chat-markdown a { color: #d8b4fe; text-decoration: underline; text-underline-offset: 2px; }
+.career-chat-markdown blockquote { margin: 0.5rem 0; padding-left: 0.65rem; border-left: 2px solid #8b5cf6; color: #cfc5dd; }
+
+@media (max-width: 520px) {
+  .career-roadmap-markdown { font-size: 0.9rem; }
+  .career-roadmap-markdown h1 { font-size: 1.4rem; }
+  .career-roadmap-markdown h2 { font-size: 1.2rem; }
+  .career-roadmap-markdown th,
+  .career-roadmap-markdown td { padding: 0.5rem; }
+}
+
